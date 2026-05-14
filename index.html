@@ -272,6 +272,61 @@
   .tool-desc { font-size: 10px; color: #999; line-height: 1.4; }
 
   .gap10 { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ── CRM 通用 ── */
+  input.text-input {
+    width: 100%; background: #fff; border: 1px solid #ddd;
+    border-radius: 8px; color: #1a1a1a; padding: 11px 14px;
+    font-size: 14px; font-family: inherit; margin-bottom: 10px;
+  }
+  input.text-input::placeholder { color: #bbb; }
+
+  /* ── 客戶卡片 ── */
+  .cust-card {
+    background: #fff; border: 1px solid #e8e8e8; border-left: 4px solid #cc0000;
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer;
+  }
+  .cust-card:active { background: #fff5f5; }
+  .cust-name  { font-size: 15px; font-weight: bold; color: #1a1a1a; }
+  .cust-meta  { font-size: 12px; color: #888; margin-top: 3px; }
+  .cust-tags  { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .tag-pill { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #f0f0f0; color: #555; border: 1px solid #e0e0e0; }
+  .tag-pill.red   { background: #fff0f0; color: #cc0000; border-color: #ffcccc; }
+  .tag-pill.green { background: #f0fff0; color: #2e7d32; border-color: #c8e6c9; }
+  .tag-pill.blue  { background: #f0f4ff; color: #1565c0; border-color: #bbdefb; }
+  .tag-pill.gray  { background: #f5f5f5; color: #888; border-color: #e0e0e0; }
+
+  /* ── 狀態徽章 ── */
+  .status-badge { display: inline-block; font-size: 11px; font-weight: bold; padding: 2px 10px; border-radius: 10px; margin-left: 6px; }
+  .s-pending { background: #fff8e1; color: #f57f17; }
+  .s-quoted  { background: #e3f2fd; color: #1565c0; }
+  .s-won     { background: #e8f5e9; color: #2e7d32; }
+  .s-lost    { background: #f5f5f5; color: #9e9e9e; }
+
+  /* ── 行程記錄 ── */
+  .log-item { border-left: 3px solid #e0e0e0; padding: 6px 10px; margin-bottom: 6px; font-size: 13px; color: #444; line-height: 1.6; }
+  .log-date { font-size: 11px; color: #aaa; margin-bottom: 2px; }
+
+  /* ── 業績統計卡 ── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 10px; text-align: center; }
+  .stat-num  { font-size: 28px; font-weight: 900; color: #cc0000; }
+  .stat-label{ font-size: 11px; color: #888; margin-top: 2px; }
+
+  /* ── 跟進提醒 ── */
+  .remind-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #fff8f0; border: 1px solid #ffe0b2; border-radius: 8px; margin-bottom: 6px; cursor: pointer; }
+  .remind-dot  { width: 8px; height: 8px; border-radius: 50%; background: #ff6600; flex-shrink: 0; }
+  .remind-name { font-size: 14px; font-weight: bold; color: #1a1a1a; }
+  .remind-sub  { font-size: 12px; color: #888; margin-top: 1px; }
+
+  /* ── 搜尋欄 ── */
+  .search-bar { width: 100%; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; color: #1a1a1a; padding: 10px 14px; font-size: 14px; font-family: inherit; margin-bottom: 12px; }
+
+  /* ── 其他 ── */
+  .danger-btn { width: 100%; padding: 12px; background: #fff; border: 1px solid #ffcccc; border-radius: 8px; color: #cc0000; font-size: 14px; cursor: pointer; margin-top: 8px; font-family: inherit; }
+  .divider    { border: none; border-top: 1px solid #f0f0f0; margin: 14px 0; }
+  .empty-state{ text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -897,6 +952,16 @@ function render() {
           <div class="tool-name">客戶跟進腳本</div>
           <div class="tool-desc">試乘後/沉默客戶/月底衝業績</div>
         </div>
+        <div class="tool-card" onclick="startTool('crm')">
+          <div class="tool-icon">👥</div>
+          <div class="tool-name">客戶管理</div>
+          <div class="tool-desc">新增/編輯/跟進狀態追蹤</div>
+        </div>
+        <div class="tool-card" onclick="startTool('marketing')">
+          <div class="tool-icon">📊</div>
+          <div class="tool-name">行銷中心</div>
+          <div class="tool-desc">業績統計/提醒/專屬文案</div>
+        </div>
       </div>`;
     return;
   }
@@ -970,7 +1035,20 @@ function render() {
     return;
   }
 
-  // ══ 競品比較 ══════════════════════════════════════════
+  // ══ 客戶管理 ══════════════════════════════════════════
+  if (state.tool === "crm") {
+    updateProgress(0, 0);
+    renderCRM(body);
+    return;
+  }
+
+  // ══ 行銷中心 ══════════════════════════════════════════
+  if (state.tool === "marketing") {
+    updateProgress(0, 0);
+    renderMarketing(body);
+    return;
+  }
+
   if (state.tool === "rival") {
     if (state.step === 0) {
       updateProgress(0, 3);
@@ -1094,10 +1172,441 @@ function render() {
   }
 }
 
+// ══ CRM 資料層 ════════════════════════════════════════════
+const STATUS_MAP = {
+  pending: { label: "待聯絡", cls: "s-pending", emoji: "🟡" },
+  quoted:  { label: "已報價", cls: "s-quoted",  emoji: "🔵" },
+  won:     { label: "已成交", cls: "s-won",     emoji: "🟢" },
+  lost:    { label: "放棄",   cls: "s-lost",    emoji: "⚫" },
+};
+
+function loadCustomers() {
+  try { return JSON.parse(localStorage.getItem("toyota_crm_customers") || "[]"); } catch(e) { return []; }
+}
+function saveCustomers(list) {
+  localStorage.setItem("toyota_crm_customers", JSON.stringify(list));
+}
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function fmtDate(str) {
+  if (!str) return "";
+  const d = new Date(str);
+  return (d.getMonth()+1) + "/" + d.getDate();
+}
+function monthKey() { const d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1); }
+
+// ── CRM 狀態 ─────────────────────────────────────────────
+let crmState = {
+  view: "list",       // list | detail | edit | new
+  customerId: null,
+  search: "",
+  filterStatus: "all",
+  editForm: {},
+  newLog: "",
+};
+
+function getCust(id) { return loadCustomers().find(c => c.id === id); }
+
+// ── CRM 渲染 ──────────────────────────────────────────────
+function renderCRM(body) {
+  if (crmState.view === "list")   return renderCRMList(body);
+  if (crmState.view === "detail") return renderCRMDetail(body);
+  if (crmState.view === "edit")   return renderCRMEdit(body);
+  if (crmState.view === "new")    return renderCRMEdit(body, true);
+}
+
+function renderCRMList(body) {
+  const customers = loadCustomers();
+  const q = crmState.search.toLowerCase();
+  const filtered = customers.filter(c => {
+    const matchSearch = !q || c.name.toLowerCase().includes(q) || (c.phone||"").includes(q) || (c.carInterest||"").includes(q);
+    const matchStatus = crmState.filterStatus === "all" || c.status === crmState.filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  let html = '<button class="btn-back" onclick="goHome()">← 返回</button>';
+  html += '<div class="step-title">👥 客戶管理</div>';
+  html += '<input class="search-bar" placeholder="🔍 搜尋姓名、電話、車款..." oninput="crmSearch(this.value)" value="' + escH(crmState.search) + '">';
+
+  // 狀態篩選
+  html += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">';
+  [["all","全部"],["pending","待聯絡"],["quoted","已報價"],["won","已成交"],["lost","放棄"]].forEach(([k,v]) => {
+    const active = crmState.filterStatus === k ? "background:#cc0000;color:#fff;border-color:#cc0000;" : "";
+    html += '<button style="padding:5px 12px;border-radius:16px;border:1px solid #ddd;font-size:12px;cursor:pointer;' + active + '" onclick="crmFilter(\'' + k + '\')">' + v + '</button>';
+  });
+  html += '</div>';
+
+  if (filtered.length === 0) {
+    html += '<div class="empty-state"><div class="empty-icon">👤</div>' + (customers.length === 0 ? "尚無客戶資料<br>點下方按鈕新增第一位客戶" : "找不到符合的客戶") + '</div>';
+  } else {
+    filtered.sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||"")).forEach(c => {
+      const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
+      html += '<div class="cust-card" onclick="crmOpen(\'' + c.id + '\')">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      html += '<span class="cust-name">' + escH(c.name) + '</span>';
+      html += '<span class="status-badge ' + st.cls + '">' + st.emoji + ' ' + st.label + '</span></div>';
+      html += '<div class="cust-meta">' + (c.phone ? "📞 " + escH(c.phone) : "") + (c.carInterest ? "　🚗 " + escH(c.carInterest) : "") + '</div>';
+      if (c.budget || c.timeline) {
+        html += '<div class="cust-meta">' + (c.budget ? "💰 " + escH(c.budget) : "") + (c.timeline ? "　📅 " + escH(c.timeline) : "") + '</div>';
+      }
+      const tags = c.tags || [];
+      if (tags.length) {
+        html += '<div class="cust-tags">' + tags.map(t => '<span class="tag-pill">' + escH(t) + '</span>').join("") + '</div>';
+      }
+      html += '</div>';
+    });
+  }
+
+  html += '<button class="btn-next" style="margin-top:16px" onclick="crmNew()">＋ 新增客戶</button>';
+  body.innerHTML = html;
+}
+
+function renderCRMDetail(body) {
+  const c = getCust(crmState.customerId);
+  if (!c) { crmState.view = "list"; renderCRM(body); return; }
+  const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
+  const logs = c.logs || [];
+
+  let html = '<button class="btn-back" onclick="crmBack()">← 返回</button>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  html += '<div style="font-size:18px;font-weight:bold">' + escH(c.name) + '<span class="status-badge ' + st.cls + '">' + st.label + '</span></div>';
+  html += '<button style="background:#cc0000;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer" onclick="crmEdit(\'' + c.id + '\')">編輯</button></div>';
+
+  // 基本資料
+  html += '<div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;line-height:2">';
+  if (c.phone)       html += '📞 ' + escH(c.phone) + '<br>';
+  if (c.carInterest) html += '🚗 有興趣車款：' + escH(c.carInterest) + '<br>';
+  if (c.budget)      html += '💰 預算：' + escH(c.budget) + '<br>';
+  if (c.timeline)    html += '📅 時程：' + escH(c.timeline) + '<br>';
+  if (c.birthday)    html += '🎂 生日：' + escH(c.birthday) + '<br>';
+  if (c.source)      html += '📌 來源：' + escH(c.source) + '<br>';
+  html += '</div>';
+
+  // 標籤
+  const tags = c.tags || [];
+  if (tags.length) {
+    html += '<div class="cust-tags" style="margin-bottom:12px">' + tags.map(t => '<span class="tag-pill">' + escH(t) + '</span>').join("") + '</div>';
+  }
+
+  // 快速更新狀態
+  html += '<div class="field-label">快速更新狀態</div>';
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+  Object.entries(STATUS_MAP).forEach(([k,v]) => {
+    const active = c.status === k ? "background:#cc0000;color:#fff;border-color:#cc0000;" : "";
+    html += '<button style="padding:6px 12px;border-radius:16px;border:1px solid #ddd;font-size:12px;cursor:pointer;' + active + '" onclick="crmSetStatus(\'' + c.id + "','" + k + '\')">' + v.emoji + ' ' + v.label + '</button>';
+  });
+  html += '</div>';
+
+  // 一鍵生成專屬文案
+  html += '<button class="btn-next" style="margin-bottom:8px" onclick="crmGenerateCopy(\'' + c.id + '\')">✍️ 生成 ' + escH(c.name) + ' 專屬文案</button>';
+
+  // 新增記錄
+  html += '<hr class="divider">';
+  html += '<div class="field-label">新增跟進記錄</div>';
+  html += '<textarea class="note-input" style="min-height:70px" placeholder="例：今日試乘 RAV4，對油電版很有興趣，預算約110萬，下週再聯絡..." oninput="crmState.newLog=this.value">' + escH(crmState.newLog) + '</textarea>';
+  html += '<button class="btn-next" style="margin-top:6px" onclick="crmAddLog(\'' + c.id + '\')">＋ 新增記錄</button>';
+
+  // 歷史記錄
+  html += '<hr class="divider">';
+  html += '<div class="field-label">跟進歷史（' + logs.length + '筆）</div>';
+  if (logs.length === 0) {
+    html += '<div style="color:#bbb;font-size:13px;padding:10px 0">尚無記錄</div>';
+  } else {
+    [...logs].reverse().forEach(log => {
+      html += '<div class="log-item"><div class="log-date">' + escH(log.date) + '</div>' + escH(log.text) + '</div>';
+    });
+  }
+
+  html += '<hr class="divider">';
+  html += '<button class="danger-btn" onclick="crmDelete(\'' + c.id + '\')">🗑️ 刪除此客戶</button>';
+  body.innerHTML = html;
+}
+
+function renderCRMEdit(body, isNew) {
+  const f = crmState.editForm;
+  const title = isNew ? "新增客戶" : "編輯客戶";
+
+  let html = '<button class="btn-back" onclick="crmBack()">← 返回</button>';
+  html += '<div class="step-title">' + title + '</div>';
+
+  const fld = (label, key, placeholder, type) =>
+    '<div class="field-label">' + label + '</div>' +
+    '<input class="text-input" type="' + (type||"text") + '" placeholder="' + placeholder + '" value="' + escH(f[key]||"") + '" oninput="crmField(\'' + key + '\',this.value)">';
+
+  html += fld("姓名 *", "name", "例：王小明");
+  html += fld("電話", "phone", "例：0912-345-678", "tel");
+  html += fld("有興趣車款", "carInterest", "例：RAV4、Camry");
+  html += fld("預算", "budget", "例：100萬以內");
+  html += fld("購車時程", "timeline", "例：3個月內、年底前");
+  html += fld("生日", "birthday", "例：1985-06-15", "date");
+  html += fld("客戶來源", "source", "例：老客戶介紹、展覽活動");
+
+  // 狀態
+  html += '<div class="field-label">狀態</div>';
+  html += '<select class="promo-select" onchange="crmField(\'status\',this.value)">';
+  Object.entries(STATUS_MAP).forEach(([k,v]) => {
+    html += '<option value="' + k + '"' + (f.status===k?" selected":"") + '>' + v.emoji + ' ' + v.label + '</option>';
+  });
+  html += '</select>';
+
+  // 標籤
+  html += '<div class="field-label">標籤（逗號分隔）</div>';
+  html += '<input class="text-input" placeholder="例：SUV興趣,油電偏好,急件" value="' + escH((f.tags||[]).join(",")) + '" oninput="crmField(\'tags\',this.value)">';
+
+  html += '<div class="field-label">備註</div>';
+  html += '<textarea class="note-input" style="min-height:70px" placeholder="其他備註..." oninput="crmField(\'note\',this.value)">' + escH(f.note||"") + '</textarea>';
+
+  html += '<button class="btn-next" onclick="crmSave(' + (isNew?"true":"false") + ')" style="margin-top:6px">💾 儲存</button>';
+  if (!isNew) html += '<button class="danger-btn" onclick="crmDelete(\'' + f.id + '\')">🗑️ 刪除此客戶</button>';
+  body.innerHTML = html;
+}
+
+// ── CRM 操作函數 ──────────────────────────────────────────
+function crmSearch(v) { crmState.search = v; render(); }
+function crmFilter(v) { crmState.filterStatus = v; render(); }
+function crmField(k, v) { crmState.editForm[k] = v; }
+function crmBack() {
+  if (crmState.view === "detail" || crmState.view === "new") crmState.view = "list";
+  else if (crmState.view === "edit") crmState.view = "detail";
+  crmState.newLog = "";
+  render();
+}
+function crmOpen(id) {
+  crmState.customerId = id; crmState.view = "detail"; crmState.newLog = ""; render();
+}
+function crmNew() {
+  crmState.editForm = { status: "pending", tags: [] }; crmState.view = "new"; render();
+}
+function crmEdit(id) {
+  const c = getCust(id);
+  crmState.editForm = Object.assign({}, c, { tags: (c.tags||[]) });
+  crmState.view = "edit"; render();
+}
+function crmSave(isNew) {
+  const f = crmState.editForm;
+  if (!f.name || !f.name.trim()) { alert("請輸入客戶姓名"); return; }
+  const customers = loadCustomers();
+  const tags = typeof f.tags === "string" ? f.tags.split(",").map(t=>t.trim()).filter(Boolean) : (f.tags||[]);
+  if (isNew) {
+    const newC = Object.assign({}, f, { id: genId(), tags, createdAt: todayStr(), updatedAt: todayStr(), logs: [] });
+    customers.push(newC);
+    crmState.customerId = newC.id;
+    crmState.view = "detail";
+  } else {
+    const idx = customers.findIndex(c => c.id === f.id);
+    if (idx >= 0) { customers[idx] = Object.assign({}, customers[idx], f, { tags, updatedAt: todayStr() }); }
+    crmState.view = "detail";
+  }
+  saveCustomers(customers); crmState.newLog = ""; render();
+}
+function crmSetStatus(id, status) {
+  const customers = loadCustomers();
+  const idx = customers.findIndex(c => c.id === id);
+  if (idx >= 0) { customers[idx].status = status; customers[idx].updatedAt = todayStr(); }
+  saveCustomers(customers); render();
+}
+function crmAddLog(id) {
+  const text = crmState.newLog.trim();
+  if (!text) { alert("請輸入記錄內容"); return; }
+  const customers = loadCustomers();
+  const idx = customers.findIndex(c => c.id === id);
+  if (idx >= 0) {
+    customers[idx].logs = customers[idx].logs || [];
+    customers[idx].logs.push({ date: todayStr(), text });
+    customers[idx].updatedAt = todayStr();
+  }
+  saveCustomers(customers); crmState.newLog = ""; render();
+}
+function crmDelete(id) {
+  if (!confirm("確定要刪除此客戶嗎？")) return;
+  const customers = loadCustomers().filter(c => c.id !== id);
+  saveCustomers(customers); crmState.view = "list"; render();
+}
+function crmGenerateCopy(id) {
+  const c = getCust(id);
+  if (!c) return;
+  // 切換到文案工具，預填客戶姓名與車款
+  state.tool = "copy"; state.step = 0;
+  state.customerName = c.name;
+  if (c.carInterest) {
+    const found = CARS.find(car => c.carInterest.includes(car.name));
+    if (found) state.car = found;
+  }
+  render();
+}
+
+// ══ 行銷中心 ══════════════════════════════════════════════
+function renderMarketing(body) {
+  const customers = loadCustomers();
+  const today = todayStr();
+  const mk = monthKey();
+
+  // 業績統計
+  const thisMonth = customers.filter(c => (c.updatedAt||"").startsWith(mk.split("-")[0]+"-"+mk.split("-")[1].padStart(2,"0")));
+  const contacted = customers.filter(c => (c.logs||[]).some(l => l.date.slice(0,7) === today.slice(0,7))).length;
+  const trials    = customers.filter(c => (c.logs||[]).some(l => l.date.slice(0,7) === today.slice(0,7) && (l.text.includes("試乘")||l.text.includes("試駕")))).length;
+  const won       = customers.filter(c => c.status === "won").length;
+  const wonMonth  = customers.filter(c => c.status === "won" && (c.updatedAt||"").slice(0,7) === today.slice(0,7)).length;
+
+  let html = '<button class="btn-back" onclick="goHome()">← 返回</button>';
+  html += '<div class="step-title">📊 行銷中心</div>';
+
+  // 業績數字
+  html += '<div style="font-size:12px;color:#cc0000;font-weight:bold;letter-spacing:1px;margin-bottom:8px">本月業績統計</div>';
+  html += '<div class="stat-grid">';
+  html += '<div class="stat-card"><div class="stat-num">' + contacted + '</div><div class="stat-label">本月接洽客戶</div></div>';
+  html += '<div class="stat-card"><div class="stat-num">' + trials + '</div><div class="stat-label">本月試乘次數</div></div>';
+  html += '<div class="stat-card"><div class="stat-num">' + wonMonth + '</div><div class="stat-label">本月成交</div></div>';
+  html += '<div class="stat-card"><div class="stat-num">' + won + '</div><div class="stat-label">累計成交</div></div>';
+  html += '</div>';
+
+  // 客戶總覽
+  const total   = customers.length;
+  const pending = customers.filter(c => c.status === "pending").length;
+  const quoted  = customers.filter(c => c.status === "quoted").length;
+  html += '<div class="stat-grid">';
+  html += '<div class="stat-card"><div class="stat-num">' + total + '</div><div class="stat-label">總客戶數</div></div>';
+  html += '<div class="stat-card"><div class="stat-num" style="color:#f57f17">' + pending + '</div><div class="stat-label">待聯絡</div></div>';
+  html += '<div class="stat-card"><div class="stat-num" style="color:#1565c0">' + quoted + '</div><div class="stat-label">已報價</div></div>';
+  html += '<div class="stat-card"><div class="stat-num" style="color:#9e9e9e">' + customers.filter(c=>c.status==="lost").length + '</div><div class="stat-label">放棄</div></div>';
+  html += '</div>';
+
+  // 生日提醒（本月）
+  const thisMonthNum = new Date().getMonth() + 1;
+  const bdayList = customers.filter(c => {
+    if (!c.birthday) return false;
+    const m = parseInt((c.birthday||"").split("-")[1]);
+    return m === thisMonthNum;
+  });
+  if (bdayList.length > 0) {
+    html += '<hr class="divider">';
+    html += '<div style="font-size:12px;color:#cc0000;font-weight:bold;letter-spacing:1px;margin-bottom:8px">🎂 本月生日客戶</div>';
+    bdayList.forEach(c => {
+      const bd = c.birthday ? c.birthday.slice(5) : "";
+      html += '<div class="remind-item" onclick="crmOpen(\'' + c.id + '\')">';
+      html += '<div class="remind-dot" style="background:#e91e63"></div>';
+      html += '<div><div class="remind-name">' + escH(c.name) + '　<span style="font-size:12px;color:#e91e63">' + bd + '</span></div>';
+      html += '<div class="remind-sub">' + (c.carInterest||"") + (c.phone ? "　" + c.phone : "") + '</div></div></div>';
+    });
+  }
+
+  // 待跟進提醒
+  const needFollowup = customers.filter(c => c.status === "pending" || c.status === "quoted");
+  if (needFollowup.length > 0) {
+    html += '<hr class="divider">';
+    html += '<div style="font-size:12px;color:#cc0000;font-weight:bold;letter-spacing:1px;margin-bottom:8px">⏰ 待跟進客戶（' + needFollowup.length + '）</div>';
+    needFollowup.slice(0,10).forEach(c => {
+      const st = STATUS_MAP[c.status];
+      const lastLog = (c.logs||[]).slice(-1)[0];
+      html += '<div class="remind-item" onclick="crmOpen(\'' + c.id + '\')">';
+      html += '<div class="remind-dot"></div>';
+      html += '<div><div class="remind-name">' + escH(c.name) + ' <span class="status-badge ' + st.cls + '">' + st.label + '</span></div>';
+      html += '<div class="remind-sub">' + (c.carInterest||"尚未選擇車款") + (lastLog ? "　最後：" + lastLog.date : "") + '</div></div></div>';
+    });
+    if (needFollowup.length > 10) html += '<div style="text-align:center;font-size:12px;color:#aaa;margin-top:4px">還有 ' + (needFollowup.length-10) + ' 位...</div>';
+  }
+
+  if (customers.length === 0) {
+    html += '<div class="empty-state"><div class="empty-icon">📊</div>尚無客戶資料<br>先到客戶管理新增客戶</div>';
+  }
+
+  // ── 資料備份與還原 ──
+  html += '<hr class="divider">';
+  html += '<div style="font-size:12px;color:#cc0000;font-weight:bold;letter-spacing:1px;margin-bottom:10px">💾 資料備份與還原</div>';
+
+  // 備份說明
+  html += '<div style="background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:12px;font-size:12px;color:#666;line-height:1.8;margin-bottom:12px">';
+  html += '📌 建議每週備份一次，將 .json 檔存入 Google 雲端或 LINE 傳給自己<br>';
+  html += '📌 換手機或清除瀏覽器後，用「還原資料」重新匯入即可<br>';
+  html += '📌 目前共 <strong style="color:#cc0000">' + customers.length + '</strong> 位客戶資料';
+  html += '</div>';
+
+  // 匯出按鈕
+  html += '<button class="btn-next" onclick="exportData()" style="margin-bottom:8px">📥 匯出備份（下載 .json）</button>';
+
+  // 匯入區塊
+  html += '<div style="border:2px dashed #ddd;border-radius:8px;padding:14px;text-align:center">';
+  html += '<div style="font-size:13px;color:#888;margin-bottom:10px">📤 還原資料（選擇備份檔案）</div>';
+  html += '<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">';
+  html += '<button class="btn-reset" style="margin-top:0;border:1px solid #cc0000;color:#cc0000" onclick="document.getElementById(\'importFile\').click()">選擇 .json 備份檔案</button>';
+  html += '</div>';
+
+  body.innerHTML = html;
+}
+
+function escH(str) {
+  return String(str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ══ 備份與還原 ════════════════════════════════════════════
+function exportData() {
+  const customers = loadCustomers();
+  if (customers.length === 0) { alert("目前沒有任何客戶資料可以匯出"); return; }
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    exportedBy: CONSULTANT.name,
+    customers: customers,
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const date = todayStr().replace(/-/g, "");
+  a.href     = url;
+  a.download = "Toyota_CRM_備份_" + date + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const payload = JSON.parse(e.target.result);
+      // 支援兩種格式：新版 { customers: [...] } 或舊版直接是陣列
+      const incoming = Array.isArray(payload) ? payload : (payload.customers || []);
+      if (!Array.isArray(incoming) || incoming.length === 0) {
+        alert("檔案格式不正確或無客戶資料，請確認是否為正確的備份檔");
+        return;
+      }
+      const existing = loadCustomers();
+      const choice = existing.length > 0
+        ? confirm("目前已有 " + existing.length + " 位客戶資料。\n\n按「確定」→ 合併（保留現有＋匯入新增）\n按「取消」→ 覆蓋（清除現有，只保留備份）")
+        : null;
+
+      let merged;
+      if (choice === true) {
+        // 合併：以 id 去重，備份資料優先
+        const existingMap = {};
+        existing.forEach(c => { existingMap[c.id] = c; });
+        incoming.forEach(c => { existingMap[c.id] = c; });
+        merged = Object.values(existingMap);
+      } else {
+        // 覆蓋 or 直接匯入（原本無資料）
+        merged = incoming;
+      }
+      saveCustomers(merged);
+      alert("✅ 成功還原 " + merged.length + " 位客戶資料！");
+      render();
+    } catch(err) {
+      alert("讀取失敗，請確認檔案是否為正確的 .json 備份格式");
+    }
+  };
+  reader.readAsText(file, "UTF-8");
+  // 清除 input 值，讓同一個檔案可以重複選取
+  input.value = "";
+}
+
 // ── 操作函數 ──────────────────────────────────────────────
 function goHome() {
   state.tool = null; state.step = 0; state.result = "";
   state.car = null; state.rivalName = null; state.followupScenario = null; state.note = "";
+  crmState.view = "list"; crmState.search = ""; crmState.customerId = null;
   render();
 }
 function startTool(t) { state.tool = t; state.step = 0; state.result = ""; state.note = ""; render(); }
