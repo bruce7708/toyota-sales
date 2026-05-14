@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TOYOTA 促銷文案產生器</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: #f2f2f2;
+    font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Helvetica Neue", sans-serif;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 48px;
+    background: #fff;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: #cc0000;
+    padding: 18px 18px 14px;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 4px;
+  }
+  .consultant-info { text-align: right; }
+  .consultant-name { font-size: 13px; color: #fff; font-weight: bold; }
+  .consultant-tel  { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+  .dealer-block {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.3);
+  }
+  .dealer-name { font-size: 12px; color: #fff; font-weight: bold; letter-spacing: 1px; }
+  .dealer-addr { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 3px; }
+  .tool-subtitle { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 6px; letter-spacing: 1px; }
+
+  /* ── Progress bar ── */
+  .progress {
+    display: flex;
+    gap: 4px;
+    padding: 0;
+    background: #b30000;
+  }
+  .dot {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.25);
+    transition: background 0.3s;
+  }
+  .dot.active { background: #fff; }
+  .dot.done   { background: rgba(255,255,255,0.7); }
+
+  /* ── Body ── */
+  .body { padding: 16px 16px; }
+
+  .step-title {
+    font-size: 11px;
+    color: #cc0000;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  /* ── Cards grid ── */
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .card {
+    background: #fafafa;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 8px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .card.active {
+    background: #fff5f5;
+    border-color: #cc0000;
+  }
+  .card-emoji { font-size: 18px; margin-bottom: 3px; }
+  .card-name  { font-size: 12px; font-weight: bold; color: #333; }
+  .card.active .card-name { color: #cc0000; }
+  .card-sub   { font-size: 10px; color: #888; margin-top: 2px; }
+  .card-price { font-size: 10px; color: #aaa; margin-top: 3px; }
+  .card.active .card-price { color: #cc0000; }
+
+  /* ── Target cards ── */
+  .target-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    text-align: left;
+  }
+  .target-card .t-emoji { font-size: 20px; flex-shrink: 0; }
+  .target-card .t-label { font-size: 13px; font-weight: bold; color: #333; }
+  .target-card.active .t-label { color: #cc0000; }
+
+  /* ── Type cards ── */
+  .type-card { padding: 16px 10px; }
+  .type-card .t-icon { font-size: 22px; margin-bottom: 6px; }
+  .type-card .t-name { font-size: 13px; font-weight: bold; color: #333; }
+  .type-card.active .t-name { color: #cc0000; }
+  .type-card .t-full { font-size: 10px; color: #999; margin-top: 2px; }
+
+  /* ── Buttons ── */
+  .btn-next {
+    width: 100%;
+    padding: 14px;
+    background: #cc0000;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 12px;
+    letter-spacing: 1px;
+    font-family: inherit;
+  }
+  .btn-next:disabled {
+    background: #ddd;
+    color: #aaa;
+    cursor: not-allowed;
+  }
+  .btn-back {
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    color: #888;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    font-family: inherit;
+  }
+
+  /* ── Promo step ── */
+  .field-label { font-size: 13px; color: #555; margin-bottom: 6px; }
+  select.promo-select {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    color: #1a1a1a;
+    padding: 11px 14px;
+    font-size: 15px;
+    margin-bottom: 14px;
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  textarea.note-input {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    color: #1a1a1a;
+    padding: 11px 14px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+  textarea.note-input::placeholder { color: #bbb; }
+
+  /* ── Result ── */
+  .result-label {
+    font-size: 11px;
+    color: #cc0000;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  .result-box {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-left: 4px solid #cc0000;
+    border-radius: 6px;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.9;
+    color: #1a1a1a;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .btn-copy {
+    width: 100%;
+    padding: 13px;
+    background: #cc0000;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn-copy.copied {
+    background: #2e7d32;
+  }
+  .btn-reset {
+    width: 100%;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: inherit;
+  }
+  .switch-types { margin-top: 20px; text-align: center; }
+  .switch-label { font-size: 12px; color: #999; margin-bottom: 8px; }
+  .switch-btns  { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .btn-switch {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    color: #555;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .tool-menu {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .tool-card {
+    background: #fafafa;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tool-card:active { background: #fff5f5; border-color: #cc0000; }
+  .tool-icon { font-size: 26px; margin-bottom: 6px; }
+  .tool-name { font-size: 13px; font-weight: bold; color: #1a1a1a; margin-bottom: 4px; }
+  .tool-desc { font-size: 10px; color: #999; line-height: 1.4; }
+
+  .gap10 { display: flex; flex-direction: column; gap: 8px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="brand">TOYOTA</div>
+      <div class="consultant-info">
+        <div class="consultant-name">賴振益 顧問</div>
+        <div class="consultant-tel">0920-585-861</div>
+      </div>
+    </div>
+    <div class="dealer-block">
+      <div class="dealer-name">TOYOTA 龜山營業所</div>
+      <div class="dealer-addr">桃園市龜山區長壽路479號</div>
+    </div>
+    <div class="tool-subtitle">銷售智能工具箱</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress" id="progress">
+    <div class="dot active" id="d0"></div>
+    <div class="dot" id="d1"></div>
+    <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
+    <div class="dot" id="d4"></div>
+  </div>
+
+  <!-- Body -->
+  <div class="body" id="body"></div>
+
+</div>
+
+<script>
+// ── 資料 ──────────────────────────────────────────────────
+const CONSULTANT = {
+  name: "賴振益",
+  mobile: "0920-585-861",
+  dealer: "TOYOTA 龜山營業所",
+  address: "桃園市龜山區長壽路479號",
+};
+
+const CARS = [
+  { name: "Corolla Cross", tag: "連三年台灣銷售冠軍",   emoji: "🚗", price: "79.9萬起" },
+  { name: "RAV4",          tag: "全新第六代 大改款登場", emoji: "🛻", price: "104萬起"  },
+  { name: "Camry",         tag: "第九代全新大改款",     emoji: "💼", price: "98.5萬起" },
+  { name: "Yaris Cross",   tag: "都會跨界小休旅",       emoji: "⚡", price: "敬請洽詢" },
+  { name: "Alphard",       tag: "頂級豪華MPV旗艦",      emoji: "👑", price: "敬請洽詢" },
+  { name: "bZ4X",          tag: "純電續航626km",        emoji: "🔋", price: "128萬起"  },
+  { name: "Hilux",         tag: "硬派越野皮卡王者",     emoji: "💪", price: "159.5萬起"},
+];
+
+const TARGETS = [
+  { id: "family",  label: "👨‍👩‍👧 家庭族",  desc: "空間大、安全性高、油耗省" },
+  { id: "biz",     label: "💼 商務人士", desc: "質感、舒適、品牌形象" },
+  { id: "young",   label: "🎓 年輕族群", desc: "外觀潮、科技感、CP值" },
+  { id: "outdoor", label: "🏕️ 戶外愛好", desc: "越野、露營、耐用" },
+  { id: "first",   label: "🌱 首購族",   desc: "預算內、好上手、省心" },
+];
+
+const PROMO_LIST = [
+  "無特定活動","年終特賣優惠","母親節限定方案","父親節感恩回饋",
+  "舊換新補貼活動","低利率零利率貸款","免費延長保固方案","試乘送精品好禮",
+];
+
+const TYPES = [
+  { id: "line",  label: "📱 LINE",  full: "LINE 促銷訊息" },
+  { id: "fb",    label: "📘 FB",    full: "Facebook 貼文" },
+  { id: "talk",  label: "🗣️ 話術",  full: "銷售話術" },
+  { id: "email", label: "📧 邀請信", full: "試乘邀請信" },
+];
+
+// ── 競品比較資料 ──────────────────────────────────────────
+const RIVALS = {
+  "Corolla Cross": [
+    { name: "Honda HR-V", points: [
+      "HR-V油耗約18-19km/L，Corolla Cross油電版高達23.5km/L，每年油費省下近萬元",
+      "HR-V無Toyota Safety Sense等級的完整主動安全，Corolla Cross全車標配TSS，差異明顯",
+      "Corolla Cross連三年台灣銷售冠軍，二手保值性遠優於HR-V，換車時差距更大",
+      "HR-V後廂空間約304公升，Corolla Cross 487公升，多出足足183公升的空間",
+    ]},
+    { name: "Mazda CX-30", points: [
+      "CX-30售價較高，起跳價差距約10萬以上，Corolla Cross CP值更突出",
+      "CX-30無油電版本，油耗不及Corolla Cross，長期養車成本明顯偏高",
+      "Corolla Cross台灣在地生產，零件取得快、保養據點密集，售後服務更方便",
+      "兩車安全性都優秀，但Corolla Cross保值性與品牌信任度在市場口碑更穩定",
+    ]},
+    { name: "Nissan Kicks", points: [
+      "Kicks雖有e-Power動感，但無法外部充電，長期油耗仍遜於Corolla Cross油電系統",
+      "Corolla Cross品牌保值性在同級距中排名更高，中古市場流通性更佳",
+      "Corolla Cross後廂487公升 vs Kicks約432公升，家庭使用空間更充裕",
+      "Toyota全台服務據點超過200個，Nissan相對較少，售後保障更全面",
+    ]},
+  ],
+  "RAV4": [
+    { name: "Honda CR-V", points: [
+      "CR-V油電版油耗約21km/L，RAV4油電最高可達近20km/L但整體動力更強，綜效馬力更大",
+      "RAV4 TSS 4.0偵測距離擴大1.7倍，是目前同級最先進的主動安全系統",
+      "RAV4有Adventure四驅版，越野能力遠超CR-V，戶外族更適合",
+      "RAV4台灣銷售數據長期領先CR-V，保值性與品牌認可度更高",
+    ]},
+    { name: "Mazda CX-5", points: [
+      "CX-5無油電版本，長期油費支出明顯高於RAV4油電，5年差距可達10萬元以上",
+      "RAV4 Toyota Connect智能聯網，可APP遠端控車，CX-5無此功能",
+      "RAV4提供Adventure四驅、GR Sport等多元車型，選擇彈性遠大於CX-5",
+      "RAV4在台灣中型SUV市場口碑最穩，二手市場需求量更大，殘值更高",
+    ]},
+    { name: "Ford Escape", points: [
+      "Escape品牌在台灣二手市場保值性明顯低於RAV4，換車損失更大",
+      "RAV4 46項主被動安全防護，在同級距中配備最完整",
+      "RAV4全系2.5升油電，Escape油電版配額少，購車等待期較長",
+      "Toyota全台200+服務據點，Ford據點數量相對較少，售後更有保障",
+    ]},
+  ],
+  "Camry": [
+    { name: "Honda Accord", points: [
+      "Accord油電版油耗約19km/L，Camry油電高達25.3km/L，燃油效率領先近三成",
+      "Camry 225PS綜效馬力 vs Accord 135PS馬力，動力輸出差距懸殊",
+      "Camry三區獨立恆溫空調、後座電動調整，Accord在後座豪華配備上差距明顯",
+      "Camry是台灣旗艦轎車市場長期銷售冠軍，二手保值性遠超Accord",
+    ]},
+    { name: "Mazda 6", points: [
+      "Mazda 6無油電版，油耗和Camry油電差距極大，長期養車成本高很多",
+      "Camry 225PS vs Mazda 6最大192PS，動力表現Camry更勝一籌",
+      "Camry雙螢幕座艙（12.3吋儀表+12.3吋主機）科技感遠超Mazda 6",
+      "Mazda 6已在多個市場停售，零件供應與保值性有疑慮，Camry長期穩定",
+    ]},
+    { name: "Hyundai Sonata", points: [
+      "Sonata在台灣市場保值性明顯低於Camry，二手轉手時差距達數萬元",
+      "Toyota全台服務網絡完整，Hyundai據點相對少，售後服務便利性有差距",
+      "Camry品牌信任度與口碑在台灣市場遠優於Sonata，更受消費者認可",
+      "Camry油電技術成熟超過20年，穩定性與耐用度有長期市場驗證",
+    ]},
+  ],
+  "Yaris Cross": [
+    { name: "Honda WR-V", points: [
+      "WR-V無油電版，油耗遜於Yaris Cross，通勤族長期油費差距明顯",
+      "Yaris Cross TSS主動安全全車標配，WR-V在安全配備上有差距",
+      "Yaris Cross Smart Entry+Push Start，WR-V入門版無此配備",
+      "Toyota品牌保值性長期優於Honda WR-V，換車時殘值差距可達數萬",
+    ]},
+    { name: "Nissan Juke", points: [
+      "Juke在台灣市場保值性明顯低於Yaris Cross，二手行情差距大",
+      "Yaris Cross油電系統在市區省油表現更優異，每月油費可省更多",
+      "Toyota全台200+保養據點，Nissan數量相對少，日常保養更方便",
+      "Yaris Cross後廂458公升，Juke僅約422公升，空間機能更實用",
+    ]},
+    { name: "Suzuki Vitara", points: [
+      "Vitara無油電版，油耗無法與Yaris Cross比較，養車成本差距明顯",
+      "Yaris Cross TSS主動安全完整，Vitara在主動安全配備上相對陽春",
+      "Toyota品牌在台灣市場信任度與售後保障明顯優於Suzuki",
+      "Yaris Cross無線Apple CarPlay標配，日常科技使用體驗更佳",
+    ]},
+  ],
+  "Alphard": [
+    { name: "Honda Odyssey", points: [
+      "Odyssey已在台灣停售，Alphard是目前豪華MPV市場唯一選擇",
+      "Alphard PHEV純電續航80km，日常通勤完全免油費，Odyssey無此優勢",
+      "Alphard日本原裝進口工藝，做工精細程度遠超台灣組裝車款",
+      "Alphard保值性是豪華MPV市場第一，二手市場幾乎無折舊損失",
+    ]},
+    { name: "Mercedes V-Class", points: [
+      "V-Class起跳價遠高於Alphard，但豪華感與空間舒適度Alphard毫不遜色",
+      "Alphard維修保養成本遠低於賓士，長期持有費用差距可達百萬",
+      "Alphard在台灣市場二手保值性甚至優於部分賓士車款，稀缺性強",
+      "Toyota售後服務網絡完整，賓士原廠料工費高昂，長期成本差距懸殊",
+    ]},
+  ],
+  "bZ4X": [
+    { name: "Tesla Model Y", points: [
+      "Model Y在台灣無實體服務據點，維修需遠赴指定地點，bZ4X全台Toyota據點皆可服務",
+      "bZ4X 41項主被動安全 + TSS 3.0，安全配備比Model Y更全面完整",
+      "Toyota超過30年油電/純電技術積累，電池耐用性與品牌保障更有依據",
+      "bZ4X128萬起，首年月付9,000元方案，購車門檻明顯低於Model Y",
+    ]},
+    { name: "Hyundai Ioniq 5", points: [
+      "Hyundai在台灣保值性與二手市場需求明顯低於Toyota品牌",
+      "bZ4X全台Toyota售後據點服務，Ioniq 5維修保養據點相對少",
+      "Toyota電動化技術成熟，電池壽命與可靠度有長期市場驗證",
+      "bZ4X購車方案更彈性，首年超低月付，入主純電門檻更低",
+    ]},
+    { name: "BYD Atto 3", points: [
+      "Toyota品牌信任度與台灣市場口碑遠優於BYD，保值性差距顯著",
+      "bZ4X全台Toyota200+據點售後服務，BYD據點數量相對有限",
+      "Toyota電池技術與安全標準有國際長期驗證，BYD在台灣屬新品牌",
+      "bZ4X保值性更穩定，三年後換車時殘值差距可達數十萬",
+    ]},
+  ],
+  "Hilux": [
+    { name: "Ford Ranger", points: [
+      "Ranger雖有一定市場，但Toyota Hilux全球170國銷售，耐用口碑遠超Ranger",
+      "Hilux涉水深度700mm vs Ranger約800mm雖接近，但Hilux越野底盤調校更成熟",
+      "Toyota全台200+服務據點，柴油維修技術更成熟，Ranger保養成本相對較高",
+      "Hilux二手市場在台灣需求旺盛，保值性優於Ranger，轉手價差距明顯",
+    ]},
+    { name: "Mitsubishi Triton", points: [
+      "Triton雖售價稍低，但Hilux品牌形象與保值性明顯佔優，差價換車時回得來",
+      "Hilux全球累積銷售口碑超過50年，Triton雖也有一定歷史但影響力不及",
+      "Toyota全台服務網絡密度遠超Mitsubishi，日常保養更方便快速",
+      "Hilux改裝零件市場全球最豐富，客製化潛力Triton難以比擬",
+    ]},
+  ],
+};
+
+// ── 貸款方案資料 ──────────────────────────────────────────
+const LOAN_PLANS = [
+  { label: "24期（2年）", months: 24 },
+  { label: "36期（3年）", months: 36 },
+  { label: "48期（4年）", months: 48 },
+  { label: "60期（5年）", months: 60 },
+  { label: "72期（6年）", months: 72 },
+  { label: "84期（7年）", months: 84 },
+];
+
+// ── 跟進時機資料 ──────────────────────────────────────────
+const FOLLOWUP_SCENARIOS = [
+  { id: "after_test",   label: "🚗 試乘後隔天",    desc: "趁印象最深刻時跟進" },
+  { id: "after_quote",  label: "💰 報價後3天",     desc: "確認考慮進度" },
+  { id: "silent_week",  label: "😶 沉默一週",      desc: "溫和喚回興趣" },
+  { id: "silent_month", label: "💤 沉默一個月",    desc: "重燃購車動機" },
+  { id: "promo_new",    label: "🎁 新活動通知",    desc: "借促銷再接觸" },
+  { id: "end_month",    label: "⏰ 月底衝業績",    desc: "製造購車緊迫感" },
+  { id: "competitor",   label: "🔍 客戶看競品後",  desc: "拉回決策天平" },
+  { id: "birthday",     label: "🎂 客戶生日/節日", desc: "暖心關係維護" },
+];
+
+function buildFollowup(car, scenario, note) {
+  const c = car ? car.name : "您感興趣的車款";
+  const { name, mobile, dealer } = CONSULTANT;
+  const noteExtra = note ? `\n\n📌 ${note}` : "";
+
+  const scripts = {
+    after_test: `${name.slice(-1)}先生/小姐您好！
+
+昨天感謝您親自來試乘 Toyota ${c}，不知道試乘後整體感覺如何呢？😊
+
+有時候坐進去那個當下的感受，才是最真實的。如果有任何配備或價格上的問題，歡迎隨時告訴我，我來為您做最詳細的說明。
+
+如果您考慮好了，我可以立即幫您確認目前的現車庫存與最優方案，好車不等人喔！${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`,
+
+    after_quote: `${name.slice(-1)}先生/小姐您好！
+
+前幾天為您提供的 Toyota ${c} 報價，不知道您目前考慮得如何了呢？
+
+如果有任何疑問——不管是配備、貸款方案、或是顏色選擇，都歡迎跟我說，我來幫您做最完整的分析 📊
+
+另外如果有家人想一起來看看，也非常歡迎，我們可以安排一次完整的家庭試乘體驗！${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`,
+
+    silent_week: `${name.slice(-1)}先生/小姐您好！
+
+距離上次我們聊 Toyota ${c} 已經過了一個禮拜了，希望您最近一切都好 😊
+
+不打擾，只是想說如果您還有任何考量或比較上的疑問，我隨時都可以為您解答。
+
+買車是大事，慢慢想是對的，但好的庫存和方案不一定一直有——有需要請隨時找我！${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`,
+
+    silent_month: `${name.slice(-1)}先生/小姐您好！
+
+好一段時間沒聯絡了，希望您一切都好！我是 ${dealer} 的 ${name} 顧問 😊
+
+上次您對 Toyota ${c} 很有興趣，最近我們有一些新的方案和現車資訊，不知道您目前的購車計畫進行得如何？
+
+如果時間還沒到、或是在等某個時機點，歡迎跟我說，我可以先幫您留意庫存和優惠資訊，有好消息第一時間通知您！${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`,
+
+    promo_new: `${name.slice(-1)}先生/小姐您好！
+
+好消息要第一個告訴您！🎉
+
+我們最新推出的優惠活動，Toyota ${c} 目前有限時專案，方案比之前更划算，我第一個想到就是您！
+
+這個活動名額有限、時間有限，趁現在入主最實惠。方便的話我可以幫您試算一個最適合您的方案，請問您最近哪天方便來聊聊呢？${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`,
+
+    end_month: `${name.slice(-1)}先生/小姐您好！
+
+快月底了，特別跟您說一聲 🙏
+
+本月 Toyota ${c} 還有幾個好位置的庫存，如果這個月完成交車，我可以幫您爭取到目前最好的條件——包含額外贈品或小折扣的空間。
+
+過了這個月就不確定了，建議您如果有八九成意願，現在是最好的時間點！我幫您確認一下現車和方案，可以嗎？${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`,
+
+    competitor: `${name.slice(-1)}先生/小姐您好！
+
+聽說您最近也有去看其他車款，這完全正確，買車前多比較才放心 👍
+
+不知道您看完之後有什麼感覺呢？每台車都有自己的優點，但如果您方便的話，我可以針對您看的幾款車，做一個比較清楚的分析——在油耗、安全、保值性這些長期角度上，幫您理清思路。
+
+Toyota ${c} 的優勢我有信心跟您說清楚，歡迎隨時約時間聊！${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`,
+
+    birthday: `${name.slice(-1)}先生/小姐您好！
+
+今天是個特別的日子，祝您生日快樂！🎂🎉
+
+希望這一年裡，您所有的心願都能一一實現——包括那台心目中理想的 Toyota ${c} 😊
+
+如果這一年有想好好犒賞自己，我隨時都在，幫您找到最適合的方案，讓新的一歲從一台好車開始！${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`,
+  };
+
+  return scripts[scenario] || "";
+}
+
+function buildRival(car, rivalName, note) {
+  const c = car.name;
+  const { name, mobile } = CONSULTANT;
+  const rivalData = (RIVALS[c] || []).find(r => r.name === rivalName);
+  if (!rivalData) return "";
+  const pts = rivalData.points;
+  const noteExtra = note ? `\n\n📌 補充：${note}` : "";
+
+  return `【Toyota ${c} vs ${rivalName} 競品分析話術】
+
+您好！感謝您提到 ${rivalName}，這款車確實也很不錯，我們來客觀比較一下 😊
+
+選車最重要的是長期使用下來哪台更划算、更安心，讓我從幾個關鍵角度幫您分析：
+
+1️⃣ ${pts[0]}
+
+2️⃣ ${pts[1]}
+
+3️⃣ ${pts[2]}
+
+4️⃣ ${pts[3]}
+
+${rivalName} 當然也有它的優點，但如果您把油費、保值性、售後服務這些長期因素加進來算，Toyota ${c} 的整體持有成本往往更划算。
+
+最好的方式還是親自來試乘一次，坐進去感受才是最真實的！我可以幫您安排，完全沒有壓力 😊${noteExtra}
+
+📞 ${name} 顧問 ${mobile}`;
+}
+
+
+const CAR_DATA = {
+  "Corolla Cross": {
+    headline: "連三年蟬聯台灣銷售冠軍，不是沒有原因！",
+    hook: { family:"帶全家出遊再也不怕塞車費油，一週加一次油是日常！", biz:"上班代步進出停車場，外出拜訪客戶，每一刻都輕鬆省心。", young:"都會感外型加上序列式流水方向燈，停紅燈都有人回頭看！", outdoor:"後廂放下露營裝備還有餘裕，油電模式市區純電靜音超實用。", first:"台灣賣最好的車不是偶然，79.9萬起就能擁有，保值性有口皆碑！" },
+    specs: {
+      line: ["🔋 油電旗艦油耗 23.5km/L，一級節能省到笑","⚡ 全新鋰電池升級，減重14kg起步更輕快","🖥️ 12.3吋全數位儀表 + 無線 Apple CarPlay","🅿️ EPB電子手煞車 + Auto Hold 自動駐車","🛡️ Toyota Safety Sense TSS主動安全全車標配"],
+      fb:   ["油電旗艦平均油耗 23.5km/L，加油頻率直接砍半","全新鋰電池組取代傳統鎳氫，減重14kg、起步更靈敏","12.3吋全彩數位儀表板，四種顯示風格隨心切換","9吋觸控主機支援無線 Apple CarPlay / Android Auto","EPB電子手煞車 + Auto Hold，停車再也不用手忙腳亂","後廂容積487公升，6/4分離椅背可彈性擴充","TSS主動安全：ACC全速域跟車、PCS預警防護全數標配"],
+      talk: ["油電旗艦油耗高達23.5km/L，一般人一個月只需加一到兩次油，養車成本超低","全新升級鋰電池，比舊款輕了整整14公斤，起步加速感受明顯提升","12.3吋全數位儀表板、9吋觸控主機，支援無線Apple CarPlay，科技感十足","EPB電子手煞車搭配Auto Hold，市區走走停停完全不費力","後廂487公升空間，後座6/4分離折疊，出遊購物都裝得下","Toyota Safety Sense全車標配，ACC跟車、PCS預警、LTA車道輔助一應俱全","連續三年台灣銷售第一，保值性在同級車中最有保障"],
+      email:["動力系統：1.8升油電Hybrid，鋰電池升級版，油耗23.5km/L（一級節能）","外觀設計：Urban Premium都市潮流設計，序列式LED流水方向燈","數位座艙：12.3吋全彩數位儀表 + 9吋無線Apple CarPlay觸控主機","駕駛輔助：EPB電子手煞車 + Auto Hold自動駐車，S-Flow單區恆溫空調","主動安全：Toyota Safety Sense TSS — ACC全速域、LTA車道、PCS預警全數標配","空間機能：後廂487公升，6/4分離後座，Smart Entry免鑰匙進入","市場地位：2021-2024連續三年台灣銷售冠軍，殘值保障業界最優"],
+    },
+  },
+  "RAV4": {
+    headline: "全新第六代大改款 RAV4，台灣中型SUV的全新標竿！",
+    hook: { family:"46項安全防護全家守護，後座空間超寬敞，全家旅遊絕不將就！", biz:"104萬起即享旗艦配備，質感與實力兼備，接送客戶倍有面子。", young:"全新大改款外觀霸氣進化，GR Sport有換檔撥片，熱血又時尚！", outdoor:"Adventure四驅版專為戶外打造，車頂架、越野底盤全套一次到位！", first:"台灣最受歡迎的中型SUV，配備豐富、保值穩定，買了絕對不後悔！" },
+    specs: {
+      line: ["🔋 全新第五代油電系統，動力與省油大幅升級","🛡️ TSS 4.0主動安全，前方偵測距離擴大1.7倍","🖥️ 12.9吋日本原裝懸浮主機，整合空調與導航","📱 Toyota Connect智能聯網，手機APP遠端遙控","🚙 最高46項主被動安全，含底盤透視環景系統"],
+      fb:   ["全新第五代2.5升油電系統，馬力與油耗雙雙升級","最新TSS 4.0主動安全，前方偵測距離擴大1.7倍、水平視野擴大1.15倍","12.9吋日本原裝懸浮式觸控主機，整合空調、導航、駕駛輔助一鍵操控","Toyota Connect智能聯網：APP遠端開空調、鎖車門、緊急自動通報救援","FCTA前方橫向來車警示 + DMC駕駛疲勞偵測，新增兩大安全科技","全車最高46項主被動安全防護，PVM環景更升級底盤透視功能","Adventure四驅版：專屬車頂架 + 18吋六幅鋁圈，越野氣息全面爆發"],
+      talk: ["最新第五代油電系統，比上一代動力更強、油耗更省，直接贏在起跑點","TSS 4.0是目前Toyota最先進的主動安全系統，偵測範圍擴大快兩倍，開車更安心","12.9吋日本原裝主機，不是台灣在地改版，整合空調、導航、手機連接全部一螢幕搞定","Toyota Connect聯網功能，開車前在辦公室用手機就能先把冷氣打開，超級實用","新增FCTA前方橫向來車警示，路口轉彎時也能提前警告，這是很多車沒有的配備","Adventure四驅版有專屬車頂架、越野外觀套件，喜歡戶外的人看到一定心動","全車46項安全防護，可以說是這個級距中最完整的，買來給家人開最放心"],
+      email:["動力系統：全新第五代2.5升油電Hybrid，綜效馬力大幅提升，節能與性能兼得","主動安全：TSS 4.0 — FCTA前方橫向警示、DMC疲勞偵測、Stop&Go跟車，共46項防護","數位座艙：12.9吋日本原裝懸浮主機 + 12.3吋全彩數位儀表，雙螢幕旗艦規格","智能聯網：Toyota Connect — APP遠端空調、車門控制、碰撞自動通報緊急救援","環景系統：PVM環景升級含底盤透視功能，進出停車場更輕鬆安心","車型選擇：豪華／尊爵／尊爵+／旗艦／Adventure四驅／GR Sport，六款滿足不同需求","市場售價：104萬元起，全系列2.5升油電，創近六年最具競爭力起跳價"],
+    },
+  },
+  "Camry": {
+    headline: "第九代全新大改款 Camry，旗艦轎車的全新定義！",
+    hook: { family:"後座寬敞如頭等艙，帶長輩出遊最顯孝心，三區恆溫讓每位家人都舒適！", biz:"225馬力的從容實力，搭配旗艦內裝質感，接待最重要的客戶氣場全開。", young:"雙髻鯊前臉搭18吋銀黑切削鋁圈，不到百萬就能入手旗艦轎車！", outdoor:"高速長途最舒適的選擇，25.3km/L油耗讓你跑遠途省下一大筆油費！", first:"Toyota最經典的轎車車系，全球熱銷超過60年，選這台買了就是穩！" },
+    specs: {
+      line: ["🏎️ 2.5升第五代油電，綜效225PS/油耗25.3km/L","🦈 雙髻鯊前臉設計，18吋銀黑切削鋁圈霸氣登場","🖥️ 12.3吋數位儀表 + 12.3吋觸控主機雙螢幕","❄️ 油電旗艦獨享HUD抬頭顯示 + 三區恆溫空調","💺 後座電動調整 + 中央控制面板如頭等艙享受"],
+      fb:   ["全新2.5升第五代油電Hybrid，綜效最大馬力225PS，油耗25.3km/L達一級節能","雙髻鯊車頭造型結合C型LED頭尾燈，視覺張力十足，任何場合都是焦點","油電旗艦搭載HUD抬頭顯示器，行車資訊直接投影前擋，視線不離路面","三區獨立恆溫空調，前排、後排各自設定溫度，搭後座中央控制面板自由掌控","後座電動椅背傾斜8度可調，中央扶手整合空調、音樂、遮陽簾一鍵控制","12.3吋全數位儀表 + 12.3吋觸控主機，支援無線Apple CarPlay、原廠衛星導航","TSS 3.0主動安全 + 8具SRS氣囊，全車系標配零妥協"],
+      talk: ["油電版綜效馬力高達225PS，開起來一點都不會有油電車那種軟腳感，加速非常有力","油耗25.3km/L，對一台這個等級的轎車來說根本是奇蹟，油費省下來可以多做很多事","雙髻鯊造型是Camry史上最有氣勢的外觀，停在路邊回頭率超高","旗艦版HUD抬頭顯示，開車時速度、導航、跟車距離全部投影在前擋玻璃，完全不用低頭","後座椅背可以電動調整傾斜角度，中央扶手裡還有獨立控制面板，乘客坐起來比開車還爽","三區恆溫空調，前座、後座分開控制，帶長輩出門再也不會有人嫌冷嫌熱","TSS 3.0主動安全加上8具氣囊全車標配，這台車對家人的保護已經是旗艦轎車標準"],
+      email:["動力規格：2.5升第五代油電Hybrid，搭配新型鋰電池，綜效馬力225PS / 油耗25.3km/L","外觀設計：第九代全新雙髻鯊造型，C型LED頭尾燈，18吋銀黑雙色切削鋁圈（旗艦版）","數位座艙：12.3吋全彩數位儀表 + 12.3吋觸控主機，內建原廠導航、無線Apple CarPlay","駕駛科技：HUD抬頭顯示器（旗艦版）、E-Mirror電子數位後視鏡、PVM360度環景","乘坐享受：三區獨立恆溫空調、後座電動傾斜調整（8度）、後座中央獨立控制面板","安全配備：TSS 3.0主動安全系統、8具SRS氣囊、BSM盲點偵測、PKSB防碰撞輔助","售價區間：98.5萬元（汽油豪華）～ 125萬元（油電旗艦），四車型滿足不同預算"],
+    },
+  },
+  "Yaris Cross": {
+    headline: "都會跨界小休旅，靈活省油，年輕世代最懂得選擇！",
+    hook: { family:"小家庭首選！緊湊車身好停車，油電省油養車費用最低，荷包最輕鬆！", biz:"都市商務代步最佳拍檔，精緻跨界外觀不失質感，停在哪都自在。", young:"跨界SUV造型超吸睛，油電省油不心疼，每月油費省下來就是娛樂基金！", outdoor:"週末山上海邊說走就走，SUV高挑視野帶你探索城市以外的世界！", first:"Toyota最親民的油電跨界休旅，預算有限也能享有完整日系品質與安全！" },
+    specs: {
+      line: ["🔋 1.5升油電系統，市區省油表現超出預期","🏙️ 緊湊車身全長4.18米，都市停車輕鬆自在","🛡️ TSS主動安全全車標配，小車也有大保護","📱 無線 Apple CarPlay / Android Auto標配","🎨 跨界SUV外觀，比轎車高挑、比大休旅靈活"],
+      fb:   ["1.5升Hybrid油電系統，市區油耗表現優異，通勤省油首選","全車系最短4.18米車身，窄巷、地下停車場都能輕鬆進出，都市代步最靈活","Toyota Safety Sense TSS主動安全全車標配，入門價格不妥協安全品質","無線Apple CarPlay / Android Auto，手機與車機無縫同步","跨界SUV造型比轎車高挑，視野開闊，比大型SUV又更靈活好開","Smart Entry免鑰匙進入 + Push Start一鍵啟動，日常使用超方便","Toyota原廠完整保固，養車成本低廉，是最划算的日系油電選擇"],
+      talk: ["1.5升油電系統讓這台車在市區開起來非常省油，通勤族每個月油費可以省很多","車身只有4.18米，在台灣大部分的停車格都停得很輕鬆，不用再為停車煩惱","TSS主動安全是全車標配，不是只有高階版才有，入門版就有ACC跟車、PCS預警","無線Apple CarPlay連接，手機放進口袋就能用，不用插線非常方便","跨界SUV造型設計，坐在裡面視野比轎車好很多，開起來有SUV的感覺","Smart Entry免鑰匙加Push Start一鍵啟動，每天上下班這些小細節超有質感","Toyota品牌的養車成本在日系車裡一直是最低的，長期使用下來非常划算"],
+      email:["動力系統：1.5升Hybrid油電，市區省油表現優異，適合通勤與日常代步","車身尺碼：全長4,180mm，緊湊靈活，都市停車輕鬆，地下停車場無壓力","外觀設計：跨界SUV造型，比轎車高挑寬闊，視野佳，個性十足","數位配備：無線Apple CarPlay / Android Auto、Smart Entry免鑰匙進入","主動安全：Toyota Safety Sense TSS — ACC全速域跟車、LTA車道、PCS預警全系標配","舒適配備：S-Flow單區恆溫空調、後廂遮物簾（部分車型）、USB Type-C快充","品牌保障：Toyota原廠完整保固，零件供應充足，養車成本業界最低"],
+    },
+  },
+  "Alphard": {
+    headline: "Alphard PHEV，豪華與純電科技的終極融合，頂規享受！",
+    hook: { family:"七人座頭等艙空間，全家出遊人人坐得舒服，第二排比商務艙還享受！", biz:"接送重要客戶或高層主管，一亮相就贏得所有人尊重，最好的移動名片。", young:"擁有一台Alphard是人生目標，PHEV純電靜音開進社區完全不打擾鄰居！", outdoor:"長途旅遊最舒適的行動空間，每一公里都是享受，根本不想下車。", first:"人生中最值得的一次投資，Alphard保值性與品牌稀缺性讓它永遠是財富象徵！" },
+    specs: {
+      line: ["⚡ PHEV純電續航80km，日常通勤完全純電","💪 最大綜效馬力306PS，豪華中藏著強勁實力","🔌 支援220V家用充電，約5小時充滿方便在家充","👑 第二排獨立電動座椅，傾斜角度隨心調整","🔇 頂級隔音車艙，靜謐程度媲美移動貴賓室"],
+      fb:   ["PHEV插電式油電，純電最長續航80km，日常通勤完全不需要加油","最大綜效馬力306PS，豪華外表下藏著超乎想像的性能實力","18.1kWh高效動力電池，支援220V/16A家用充電，約5小時充飽，在家就能補電","第二排獨立豪華座椅，電動調整傾斜角度，加上可折疊式腿托，舒適度秒殺商務艙","原裝日本進口，全車頂級隔音工程，坐在裡面幾乎感覺不到任何引擎聲與路面噪音","後排獨立空調控制面板，乘客自己掌控溫度，不受前座影響","Toyota最頂級的安全與科技配備一次到位，這不只是一台車，是移動的豪華空間"],
+      talk: ["PHEV版的Alphard純電可以跑80公里，一般人通勤上下班根本不需要加油，每天在家充電就好","306匹綜效馬力，這個數字跑車都有，但Alphard開起來安靜平穩，完全感覺不到在用力加速","在家用220V插座充電，大概五個小時就充飽，晚上睡前插電，早上出門就是滿電，超方便","第二排座椅是獨立電動調整的，傾斜角度可以調，還有腿托，坐起來真的比商務艙還舒服","隔音工程是Alphard的招牌，在裡面講話都不用大聲，開到時速120也幾乎沒有風切聲","整台車是日本原裝進口，做工精細程度跟台灣組裝版完全不同，質感一摸就感覺出來","Alphard在台灣的保值性一直是豪華MPV裡最強的，買了兩三年要換車還是賣得很好"],
+      email:["動力系統：PHEV插電混合動力，純電續航80km，最大綜效馬力306PS","電池規格：18.1kWh高效能鋰電池，支援220V/16A家用充電（約5小時充滿）","豪華座艙：第二排VIP獨立電動座椅，傾斜調整+腿托，全車頂級靜音工程","空調系統：前後獨立分區空調，乘客自主控制，各區溫度互不干擾","科技配備：原廠12.3吋觸控主機、數位儀表、無線Apple CarPlay、全車LED燈具","安全防護：Toyota Safety Sense TSS、8具SRS氣囊、BSM盲點偵測、RCTA後方警示","產地規格：日本原裝進口，頂級工藝與用料，保值性為豪華MPV市場第一"],
+    },
+  },
+  "bZ4X": {
+    headline: "Toyota純電旗艦 bZ4X，626km續航，讓純電生活真正無憂！",
+    hook: { family:"626km續航台北開到台南還有剩！全家出遊不再為找充電站焦慮！", biz:"純電零油費，每月省油錢數千元，商務代步最精打細算的選擇！", young:"純電靜音起步超爽快，加速感媲美性能車，從此不再怕油價漲！", outdoor:"充一次電就能跑遍全台，支援全台主要充電聯盟，說走就走！", first:"趕上電動車政策紅利！128萬起享受豪華純電科技，未來出行最佳起點！" },
+    specs: {
+      line: ["🔋 NEDC純電最長續航626km，充飽跑到飽","⚡ 快充支援，從10%充到80%效率大幅提升","🛡️ TSS 3.0主動安全 + 41項主被動安全防護","📱 My Toyota APP支援多家充電聯盟全台充電","🏭 Toyota超過30年電動化技術累積結晶"],
+      fb:   ["NEDC測試純電最長續航626km，台北到高雄來回一趟還有餘裕","TSS 3.0為全台首款導入版本，含路口行人辨識、RSA速限辨識、ACC跟車全數具備","41項主被動安全防護，純電車不代表要犧牲安全，這台反而是最安全的選擇之一","My Toyota APP整合U-POWER、i-Charging、EVALUE等多家充電聯盟，全台充電站一鍵找","外型採用Toyota純電家族設計語言，封閉式車頭、低風阻設計，科技感一眼就看到","車室空間寬敞，因為沒有傳統引擎艙的設計限制，前後排乘坐空間更充裕","128萬起，首年月付方案低至9,000元，電動車入門門檻從未如此友善"],
+      talk: ["626公里的續航距離，以台灣的路況和里程需求來說，一週充一次電就已經綽綽有餘","TSS 3.0是目前Toyota最新的主動安全系統，可以辨識路口行人、讀取路邊速限牌，非常智慧","41項安全防護這個數字在同價位的車款中非常難得，純電車安全性完全不輸燃油車","My Toyota APP可以在出發前遠端開空調，夏天不用一進車廂就熱，非常實用","支援全台主要充電聯盟，出門在外找充電站用APP就能搞定，不會有找不到充電的問題","電費比油費便宜太多了，以台灣電費計算，同樣跑一公里，純電大概只要燃油車三分之一的費用","128萬起，首年月付9,000元起，是目前台灣少數能讓你用輕鬆方式擁有純電車的選擇"],
+      email:["動力規格：純電BEV，NEDC測試最長續航626km，前輪驅動，動力輸出充沛流暢","充電規格：支援直流快充與交流慢充，相容多種充電規格，全台聯盟充電站皆可使用","主動安全：TSS 3.0（全台首款）— 路口行人辨識、RSA速限辨識、ACC全速域跟車","被動安全：41項主被動安全防護系統，SRS氣囊多具全面守護","智能聯網：My Toyota APP — 遠端空調控制、充電站查詢、車輛狀態監控","數位座艙：全彩數位儀表、觸控主機、無線Apple CarPlay、大型中央扶手儲物空間","購車方案：128萬起，首年超低月付9,000元方案（60期），購車入門門檻大幅降低"],
+    },
+  },
+  "Hilux": {
+    headline: "Toyota Hilux，全球最強悍皮卡，無論工作或探險都不服輸！",
+    hook: { family:"後貨台放滿露營裝備，全家野外冒險不是夢！最有個性的家庭探險車！", biz:"工地、倉庫、物流全搞定，霸氣外觀讓人印象深刻，生意人的最強夥伴！", young:"改裝潛力無限，全球Hilux改裝社群超活躍，開出去根本就是移動地標！", outdoor:"700mm涉水深度加越野底盤，哪裡有路往哪裡去，沒路就自己開出一條！", first:"買一台用十年以上不是夢！Hilux保值性是所有車款中最穩定的長期投資！" },
+    specs: {
+      line: ["💪 2.8升柴油渦輪，最大扭力500Nm拖拉載重不在話下","🌊 涉水深度達700mm，惡水泥濘輕鬆通過","🌍 全球170個國家銷售信賴，耐用傳說有口皆碑","🛡️ TSS主動安全 + BSM盲點偵測全數到位","🏕️ 一台頂兩台：工作日搬運 + 假日越野露營"],
+      fb:   ["2.8升柴油渦輪引擎，最大扭力500Nm以上，拖拉、載重、爬坡樣樣在行","涉水深度達700mm，雨季淹水路段、山區溪流一樣輕鬆過，哪裡都擋不住你","全球170個國家銷售，某些地區甚至用Hilux當救護車、軍用車，耐用性傳說級","TSS主動安全系統 + BSM盲點偵測，硬漢皮卡也有頂級科技保護","雙排座艙5人座，後方大型貨台可載重商品，週間工作、週末露營完全無縫切換","VSC車身穩定控制 + HAC上坡輔助，坡道、滑溜路面通通輕鬆掌控","全球最活躍的改裝車社群之一，各種改裝套件應有盡有，打造專屬個人風格"],
+      talk: ["2.8升柴油引擎最大扭力超過500Nm，這個數字是很多轎車或SUV根本達不到的，拖拉吊車、載重建材都沒問題","涉水深度700mm，台灣颱風季節那種淹水路段對Hilux來說根本小意思，比很多SUV還強","全球170個國家在賣，有些地方甚至用來當救護車和軍用車，耐用度已經是傳說等級","雖然是工作皮卡，但TSS主動安全、BSM盲點偵測一樣都有，科技配備完全不打折","後面那個大貨台非常實用，要搬建材、傢俱、露營裝備都放得下，一台車兩種生活","VSC穩定系統加HAC上坡輔助，開到山上濕滑路段不用擔心，系統會幫你顧好","台灣的Hilux保值性非常好，買了三五年之後要換車，二手市場還是很搶手"],
+      email:["動力規格：2.8升直列四缸柴油渦輪引擎，最大馬力204PS，峰值扭力500Nm以上","越野能力：最大涉水深度700mm，VSC車身穩定、HAC上坡輔助、差速器鎖定","車型配置：雙排座艙5人座，大型後貨台，可承載大量貨物，工作與休閒兩用","主動安全：Toyota Safety Sense TSS、BSM盲點偵測、RCTA後方橫向警示","科技配備：全彩數位儀表、觸控主機、無線Apple CarPlay、倒車影像","市場地位：全球170個國家銷售，全球皮卡市場長期銷售前三，二手保值性極佳","適用族群：建築、農業、物流業主、露營越野愛好者、追求獨特個性的車主"],
+    },
+  },
+  "Yaris": {
+    headline: "Toyota Yaris，輕巧省油，日系長青可靠從這裡出發！",
+    hook: { family:"小家庭接送孩子、買菜採購最靈活方便，停在哪都輕鬆！", biz:"都市代步最省成本，把省下的油費留著招待客戶更實在！", young:"人生第一台車最佳選擇，好開好停好保養，讓你零壓力快速上手！", outdoor:"輕鬆假日出遊，探索城市周邊景點，說走就走完全不麻煩！", first:"Toyota最入門的起點，品質可靠養車費最省，新手買車零壓力！" },
+    specs: {
+      line: ["⛽ 省油表現優異，市區油耗輕鬆應對","🏙️ 車身輕巧靈活，市區停車一次就到位","🛡️ TSS主動安全全車系標配，入門不降規","📱 Apple CarPlay / Android Auto 智慧連接","🔧 Toyota原廠保固，全台據點保養最方便"],
+      fb:   ["輕巧靈活的車身尺碼，在台灣密集的都市路況中穿梭最如魚得水","省油表現在同級小型車中名列前茅，通勤族每個月油費省到有感","TSS主動安全系統全車系標配，入門車也有ACC跟車、PCS預警，安全不打折","Apple CarPlay / Android Auto無線連接，行車娛樂與導航都能輕鬆同步","Toyota品牌在台灣的售後服務網絡最完整，不管在哪個城市都找得到保養據點","養車成本在同級距車款中最低，零件取得容易、工資合理，長期持有最划算","入門價位擁有Toyota招牌的可靠品質，初次購車、換車退休族都適合"],
+      talk: ["Yaris的車身尺碼在台灣的道路環境真的非常適合，窄巷、地下室停車場完全沒問題","油耗表現在小型車裡面是前段班，上班族每天通勤下來，一個月油費真的省很多","TSS主動安全是全車系標配，就算買最入門的版本也有跟車、預警功能，這點很重要","Toyota的保養據點遍布全台，不管你住在哪裡都找得到授權服務廠，非常方便","Yaris的零件價格合理，工資也不貴，跟其他品牌比起來長期持有成本低很多","這台車非常好開，新手上路不會有壓力，停車也容易，入門學車非常適合","Toyota品牌的二手車市場一直很穩健，就算哪天要換車，Yaris的保值性也不差"],
+      email:["動力規格：1.5升自然進氣引擎，省油表現優異，適合都市通勤與日常代步","車身尺碼：緊湊輕巧，市區停車輕鬆，窄巷穿梭無壓力，最適合台灣道路環境","主動安全：Toyota Safety Sense TSS全車系標配 — ACC跟車、LTA車道、PCS預警","數位配備：彩色觸控主機、Apple CarPlay / Android Auto智慧連接、倒車影像","舒適配備：恆溫空調（部分車型）、Smart Entry免鑰匙進入、Push Start一鍵啟動","售後保障：Toyota全台授權服務網絡，零件供應充足，養車成本業界最低","適合族群：首購族、通勤族、換車退休族、預算精打細算但不妥協品質的消費者"],
+    },
+  },
+};
+
+// ── 狀態 ──────────────────────────────────────────────────
+let state = {
+  tool: null,       // 'copy' | 'rival' | 'loan' | 'followup'
+  step: 0,
+  car: null, target: null, typeId: null,
+  promo: "無特定活動", note: "", result: "",
+  // rival
+  rivalName: null,
+  // loan
+  loanPrice: "", loanDown: "", loanMonths: 60, loanRate: 1.99,
+  // followup
+  followupScenario: null,
+};
+
+// ── 文案生成 ──────────────────────────────────────────────
+function buildContent(car, targetId, typeId, promo, note) {
+  const c = car.name;
+  const tag = car.tag;
+  const promoLine = promo !== "無特定活動" ? "\n🎁 【" + promo + "】限時優惠中！" : "";
+  const noteExtra = note ? "\n📌 " + note : "";
+  const { name, mobile, dealer, address } = CONSULTANT;
+  const data = CAR_DATA[c] || {};
+  const allSpecs = (data.specs || {});
+  const specs = allSpecs[typeId] || allSpecs["line"] || [];
+  const headline = data.headline || "Toyota " + c + "，品質可靠、口碑出眾！";
+  const hook = (data.hook || {})[targetId] || "這款車非常適合您的需求！";
+  const priceText = car.price !== "敬請洽詢" ? "\n💰 售價 " + car.price + "，歡迎洽詢最新優惠" : "";
+
+  if (typeId === "line") {
+    return "🚘【Toyota " + c + "】" + hook + "\n\n"
+      + specs.map(s => "✅ " + s).join("\n") + priceText + promoLine + noteExtra + "\n\n"
+      + "📍 " + dealer + "\n👤 " + name + " 顧問｜📞 " + mobile + "\n📮 " + address + "\n\n"
+      + "👇 立即來電或傳訊預約試乘！";
+  }
+  if (typeId === "fb") {
+    return "🌟 " + headline + "\n\n" + hook + "\n\n【" + c + " 核心亮點】\n"
+      + specs.map(s => "▸ " + s).join("\n") + priceText + promoLine + noteExtra + "\n\n"
+      + "Toyota " + c + "——不只是交通工具，是生活品質的選擇。\n想要親身感受，歡迎預約專屬試乘體驗！\n\n"
+      + "📍 " + dealer + "\n🏠 " + address + "\n👤 銷售顧問 " + name + "｜📞 " + mobile + "\n"
+      + "桃苗汽車授權服務據點，提供專業售前與售後服務\n\n"
+      + "#Toyota #" + c.replace(/\s/g,"") + " #" + tag.replace(/\s/g,"") + " #龜山Toyota #桃苗汽車 #桃園買車 #試乘免費預約";
+  }
+  if (typeId === "talk") {
+    return "您好！我是 " + dealer + " 銷售顧問 " + name + "，很高興為您介紹 Toyota " + c + " 😊\n\n"
+      + "我聽到您說的需求，我覺得 " + c + " 真的非常符合！" + hook + "\n\n"
+      + "這款車有幾個亮點我一定要跟您分享：\n"
+      + specs.map((s, i) => (i+1) + ". " + s).join("\n") + "\n\n"
+      + "【" + tag + "】這個定位，" + c + " 在同級車款中表現非常突出。"
+      + (promoLine ? "\n\n更棒的是，現在正好有【" + promo + "】，時間點非常好！" : "")
+      + noteExtra + priceText + "\n\n"
+      + "您要不要這個週末安排時間來實際坐進去感受一下？試乘完全免費，我幫您安排，保證不會讓您失望！\n我的手機隨時都可以聯絡：" + mobile;
+  }
+  if (typeId === "email") {
+    return "您好！\n\n感謝您對 Toyota " + c + " 的關注。我是 " + dealer + " 銷售顧問 " + name + "，特此致函邀請您體驗這款深受市場肯定的車款。\n\n"
+      + "【關於 Toyota " + c + "】\n" + headline + "\n\n" + hook + "\n\n【核心配備亮點】\n"
+      + specs.map(s => "• " + s).join("\n") + priceText + promoLine + noteExtra + "\n\n"
+      + "為讓您能夠親身感受 " + c + " 的出色表現，誠摯邀請您蒞臨展示中心，我們將為您安排：\n"
+      + "  ‧ 一對一專業車款介紹\n  ‧ 完整試乘體驗行程\n  ‧ 客製化配備說明與最優專案報價\n\n"
+      + "請問您近期哪個時段方便前來？歡迎直接回覆或來電，我將立即為您安排。\n\n期待與您見面！\n\n"
+      + "─────────────────────\n" + name + " 銷售顧問\n" + dealer + "\n📍 " + address + "\n📞 " + mobile + "\n"
+      + "服務項目：新車銷售、汽車保養、維修、鈑金烤漆、車險辦理\n桃苗汽車授權服務據點，提供專業的售前與售後服務";
+  }
+  return "";
+}
+
+// ── 貸款試算 ──────────────────────────────────────────────
+function calcLoan(price, down, months, rate) {
+  const principal = price - down;
+  if (principal <= 0 || months <= 0) return null;
+  const monthlyRate = rate / 100 / 12;
+  let monthly;
+  if (monthlyRate === 0) {
+    monthly = principal / months;
+  } else {
+    monthly = principal * monthlyRate * Math.pow(1+monthlyRate, months) / (Math.pow(1+monthlyRate, months) - 1);
+  }
+  const total = monthly * months + down;
+  const interest = total - price;
+  return { monthly: Math.round(monthly), total: Math.round(total), interest: Math.round(interest), principal };
+}
+
+function buildLoanScript(car, price, down, months, rate, note) {
+  const res = calcLoan(price, down, months, rate);
+  if (!res) return "請確認輸入數值後重新試算。";
+  const { name, mobile } = CONSULTANT;
+  const carName = car ? "Toyota " + car.name : "您選擇的車款";
+  const noteExtra = note ? `\n\n📌 ${note}` : "";
+  const planLabel = LOAN_PLANS.find(p => p.months === months)?.label || months + "期";
+
+  return `【${carName} 貸款試算說明】
+
+您好！根據您的需求，我幫您試算了以下方案 😊
+
+━━━━━━━━━━━━━━━
+📋 試算條件
+  車價：${price.toLocaleString()} 元
+  頭期款：${down.toLocaleString()} 元（${Math.round(down/price*100)}%）
+  貸款金額：${res.principal.toLocaleString()} 元
+  貸款期數：${planLabel}
+  年利率：${rate}%
+━━━━━━━━━━━━━━━
+💰 試算結果
+  每月月付：約 ${res.monthly.toLocaleString()} 元
+  總利息：約 ${res.interest.toLocaleString()} 元
+  總支出：約 ${res.total.toLocaleString()} 元
+━━━━━━━━━━━━━━━
+
+💡 小提醒：
+• 以上為參考試算，實際利率依個人信用評等與金融機構核貸結果為準
+• 頭期款越高、期數越短，總利息越少
+• 若有良好信用記錄，有機會申請到更優惠的利率方案
+• 我們可協助您向多家銀行詢價，找到最適合您的方案${noteExtra}
+
+有任何問題歡迎隨時詢問！
+📞 ${name} 顧問 ${mobile}`;
+}
+
+// ── 進度條更新 ────────────────────────────────────────────
+function updateProgress(step, total) {
+  for (let i = 0; i < 5; i++) {
+    const el = document.getElementById("d" + i);
+    if (!el) continue;
+    if (i < total) {
+      el.style.display = "";
+      el.className = "dot" + (i < step ? " done" : i === step ? " active" : "");
+    } else {
+      el.style.display = "none";
+    }
+  }
+}
+
+// ── 複製 ──────────────────────────────────────────────────
+function copyText(text) {
+  if (navigator.clipboard) { navigator.clipboard.writeText(text).catch(() => fallbackCopy(text)); }
+  else { fallbackCopy(text); }
+}
+function fallbackCopy(text) {
+  const el = document.createElement("textarea");
+  el.value = text; el.style.position = "fixed"; el.style.opacity = "0";
+  document.body.appendChild(el); el.focus(); el.select();
+  try { document.execCommand("copy"); } catch(e) {}
+  document.body.removeChild(el);
+}
+function escapeHtml(str) {
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ── 結果頁共用 HTML ───────────────────────────────────────
+function resultHtml(label, content, switchTypes) {
+  let html = `<div class="result-label">${label}</div>`;
+  html += `<div class="result-box">${escapeHtml(content)}</div>`;
+  html += `<button class="btn-copy" id="copyBtn" onclick="doCopy()">📋 複製內容</button>`;
+  html += `<button class="btn-reset" onclick="goHome()">🏠 回主選單</button>`;
+  if (switchTypes) {
+    html += `<div class="switch-types"><div class="switch-label">同樣設定，換個文案類型</div><div class="switch-btns">`;
+    TYPES.filter(t => t.id !== state.typeId).forEach(t => {
+      html += `<button class="btn-switch" onclick="switchType('${t.id}')">${t.label}</button>`;
+    });
+    html += `</div></div>`;
+  }
+  return html;
+}
+
+// ── 主渲染 ────────────────────────────────────────────────
+function render() {
+  const body = document.getElementById("body");
+  window.scrollTo(0, 0);
+
+  // ── 主選單 ──
+  if (!state.tool) {
+    updateProgress(0, 0);
+    body.innerHTML = `
+      <div class="step-title">選擇功能</div>
+      <div class="tool-menu">
+        <div class="tool-card" onclick="startTool('copy')">
+          <div class="tool-icon">✍️</div>
+          <div class="tool-name">促銷文案生成</div>
+          <div class="tool-desc">LINE / FB / 話術 / 邀請信</div>
+        </div>
+        <div class="tool-card" onclick="startTool('rival')">
+          <div class="tool-icon">⚔️</div>
+          <div class="tool-name">競品比較話術</div>
+          <div class="tool-desc">客戶提到競品時的應對</div>
+        </div>
+        <div class="tool-card" onclick="startTool('loan')">
+          <div class="tool-icon">🧮</div>
+          <div class="tool-name">貸款試算說明</div>
+          <div class="tool-desc">月付計算＋說明話術</div>
+        </div>
+        <div class="tool-card" onclick="startTool('followup')">
+          <div class="tool-icon">📲</div>
+          <div class="tool-name">客戶跟進腳本</div>
+          <div class="tool-desc">試乘後/沉默客戶/月底衝業績</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // ══ 促銷文案 ══════════════════════════════════════════
+  if (state.tool === "copy") {
+    if (state.step === 0) {
+      updateProgress(0, 4);
+      let html = `<button class="btn-back" onclick="goHome()">← 返回</button>`;
+      html += `<div class="step-title">① 選擇車款</div><div class="grid2">`;
+      CARS.forEach((c, i) => {
+        const active = state.car && state.car.name === c.name ? " active" : "";
+        html += `<div class="card${active}" onclick="selectCar(${i})">
+          <div class="card-emoji">${c.emoji}</div>
+          <div class="card-name">${c.name}</div>
+          <div class="card-sub">${c.tag}</div>
+          <div class="card-price">${c.price}</div>
+        </div>`;
+      });
+      html += `</div><button class="btn-next" onclick="goStep(1)" ${state.car?"":"disabled"}>下一步 →</button>`;
+      body.innerHTML = html;
+
+    } else if (state.step === 1) {
+      updateProgress(1, 4);
+      let html = `<button class="btn-back" onclick="goStep(0)">← 返回</button>`;
+      html += `<div class="step-title">② 目標客群</div><div class="gap10">`;
+      TARGETS.forEach((t, i) => {
+        const active = state.target && state.target.id === t.id ? " active" : "";
+        const parts = t.label.split(" ");
+        html += `<div class="card target-card${active}" onclick="selectTarget(${i})">
+          <div class="t-emoji">${parts[0]}</div>
+          <div><div class="t-label">${parts.slice(1).join(" ")}</div><div class="card-sub">${t.desc}</div></div>
+        </div>`;
+      });
+      html += `</div><button class="btn-next" onclick="goStep(2)" ${state.target?"":"disabled"}>下一步 →</button>`;
+      body.innerHTML = html;
+
+    } else if (state.step === 2) {
+      updateProgress(2, 4);
+      let html = `<button class="btn-back" onclick="goStep(1)">← 返回</button>`;
+      html += `<div class="step-title">③ 文案類型</div><div class="grid2">`;
+      TYPES.forEach(t => {
+        const active = state.typeId === t.id ? " active" : "";
+        const parts = t.label.split(" ");
+        html += `<div class="card type-card${active}" onclick="selectType('${t.id}')">
+          <div class="t-icon">${parts[0]}</div><div class="t-name">${parts.slice(1).join(" ")}</div>
+          <div class="t-full">${t.full}</div>
+        </div>`;
+      });
+      html += `</div><button class="btn-next" onclick="goStep(3)" ${state.typeId?"":"disabled"}>下一步 →</button>`;
+      body.innerHTML = html;
+
+    } else if (state.step === 3) {
+      updateProgress(3, 4);
+      let html = `<button class="btn-back" onclick="goStep(2)">← 返回</button>`;
+      html += `<div class="step-title">④ 促銷設定（可選）</div>`;
+      html += `<div class="field-label">促銷活動</div>`;
+      html += `<select class="promo-select" onchange="setPromo(this.value)">`;
+      PROMO_LIST.forEach(p => { html += `<option value="${p}" ${state.promo===p?"selected":""}>${p}</option>`; });
+      html += `</select>`;
+      html += `<div class="field-label">補充說明（可留空）</div>`;
+      html += `<textarea class="note-input" placeholder="例：本月底交車再折5,000..." oninput="setNote(this.value)">${state.note}</textarea>`;
+      html += `<button class="btn-next" onclick="generateCopy()">✨ 立即生成文案</button>`;
+      body.innerHTML = html;
+
+    } else if (state.step === 4) {
+      updateProgress(4, 4);
+      const typeFull = (TYPES.find(t => t.id === state.typeId)||{}).full||"";
+      body.innerHTML = resultHtml(state.car.name + " × " + typeFull, state.result, true);
+    }
+    return;
+  }
+
+  // ══ 競品比較 ══════════════════════════════════════════
+  if (state.tool === "rival") {
+    if (state.step === 0) {
+      updateProgress(0, 3);
+      let html = `<button class="btn-back" onclick="goHome()">← 返回</button>`;
+      html += `<div class="step-title">① 選擇我方車款</div><div class="grid2">`;
+      CARS.forEach((c, i) => {
+        const hasRivals = RIVALS[c.name] && RIVALS[c.name].length > 0;
+        if (!hasRivals) return;
+        const active = state.car && state.car.name === c.name ? " active" : "";
+        html += `<div class="card${active}" onclick="selectCar(${i})">
+          <div class="card-emoji">${c.emoji}</div>
+          <div class="card-name">${c.name}</div>
+          <div class="card-sub">${c.tag}</div>
+        </div>`;
+      });
+      html += `</div><button class="btn-next" onclick="goStep(1)" ${state.car?"":"disabled"}>下一步 →</button>`;
+      body.innerHTML = html;
+
+    } else if (state.step === 1) {
+      updateProgress(1, 3);
+      const rivals = RIVALS[state.car.name] || [];
+      let html = `<button class="btn-back" onclick="goStep(0)">← 返回</button>`;
+      html += `<div class="step-title">② 選擇競品車款</div><div class="gap10">`;
+      rivals.forEach(r => {
+        const active = state.rivalName === r.name ? " active" : "";
+        html += `<div class="card target-card${active}" onclick="selectRival('${r.name}')">
+          <div class="t-emoji">🆚</div>
+          <div><div class="t-label">${r.name}</div></div>
+        </div>`;
+      });
+      html += `</div>`;
+      html += `<div class="field-label" style="margin-top:14px">補充說明（可留空）</div>`;
+      html += `<textarea class="note-input" placeholder="例：客戶說競品比較省油、客戶很在意外觀..." oninput="setNote(this.value)">${state.note}</textarea>`;
+      html += `<button class="btn-next" onclick="generateRival()" ${state.rivalName?"":"disabled"}>生成比較話術</button>`;
+      body.innerHTML = html;
+
+    } else if (state.step === 2) {
+      updateProgress(2, 3);
+      body.innerHTML = resultHtml(state.car.name + " vs " + state.rivalName, state.result, false);
+    }
+    return;
+  }
+
+  // ══ 貸款試算 ══════════════════════════════════════════
+  if (state.tool === "loan") {
+    if (state.step === 0) {
+      updateProgress(0, 2);
+      let html = `<button class="btn-back" onclick="goHome()">← 返回</button>`;
+      html += `<div class="step-title">🧮 貸款試算</div>`;
+
+      html += `<div class="field-label">車款（可選）</div>`;
+      html += `<select class="promo-select" onchange="setLoanCar(this.value)">`;
+      html += `<option value="">-- 不指定車款 --</option>`;
+      CARS.forEach((c,i) => { html += `<option value="${i}" ${state.car&&state.car.name===c.name?'selected':''}>${c.name}（${c.price}）</option>`; });
+      html += `</select>`;
+
+      html += `<div class="field-label">車價（元）</div>`;
+      html += `<input class="note-input" style="min-height:0;padding:11px 14px" type="number" placeholder="例：799000" value="${state.loanPrice}" oninput="state.loanPrice=this.value" />`;
+
+      html += `<div class="field-label" style="margin-top:10px">頭期款（元）</div>`;
+      html += `<input class="note-input" style="min-height:0;padding:11px 14px" type="number" placeholder="例：200000" value="${state.loanDown}" oninput="state.loanDown=this.value" />`;
+
+      html += `<div class="field-label" style="margin-top:10px">貸款期數</div>`;
+      html += `<div class="grid2" style="gap:6px;margin-bottom:10px">`;
+      LOAN_PLANS.forEach(p => {
+        const active = state.loanMonths === p.months ? " active" : "";
+        html += `<div class="card${active}" style="padding:10px 6px" onclick="setLoanMonths(${p.months})">
+          <div class="card-name">${p.label}</div>
+        </div>`;
+      });
+      html += `</div>`;
+
+      html += `<div class="field-label">年利率（%）</div>`;
+      html += `<input class="note-input" style="min-height:0;padding:11px 14px" type="number" step="0.01" placeholder="例：1.99" value="${state.loanRate}" oninput="state.loanRate=parseFloat(this.value)||0" />`;
+
+      html += `<div class="field-label" style="margin-top:10px">補充說明（可留空）</div>`;
+      html += `<textarea class="note-input" style="min-height:60px" placeholder="例：加贈延長保固、額外折扣..." oninput="setNote(this.value)">${state.note}</textarea>`;
+
+      html += `<button class="btn-next" onclick="generateLoan()">🧮 立即試算</button>`;
+      body.innerHTML = html;
+
+    } else if (state.step === 1) {
+      updateProgress(1, 2);
+      body.innerHTML = resultHtml("貸款試算結果", state.result, false);
+    }
+    return;
+  }
+
+  // ══ 客戶跟進 ══════════════════════════════════════════
+  if (state.tool === "followup") {
+    if (state.step === 0) {
+      updateProgress(0, 2);
+      let html = `<button class="btn-back" onclick="goHome()">← 返回</button>`;
+      html += `<div class="step-title">① 選擇跟進情境</div><div class="gap10">`;
+      FOLLOWUP_SCENARIOS.forEach(s => {
+        const active = state.followupScenario === s.id ? " active" : "";
+        html += `<div class="card target-card${active}" onclick="selectFollowup('${s.id}')">
+          <div class="t-emoji" style="font-size:18px">${s.label.split(" ")[0]}</div>
+          <div><div class="t-label">${s.label.split(" ").slice(1).join(" ")}</div><div class="card-sub">${s.desc}</div></div>
+        </div>`;
+      });
+      html += `</div>`;
+
+      html += `<div class="field-label" style="margin-top:14px">車款（可選）</div>`;
+      html += `<select class="promo-select" onchange="setFollowupCar(this.value)">`;
+      html += `<option value="">-- 不指定車款 --</option>`;
+      CARS.forEach((c,i) => { html += `<option value="${i}" ${state.car&&state.car.name===c.name?'selected':''}>${c.name}</option>`; });
+      html += `</select>`;
+
+      html += `<div class="field-label">補充說明（可留空）</div>`;
+      html += `<textarea class="note-input" placeholder="例：客戶上週試乘過RAV4、正在比較競品..." oninput="setNote(this.value)">${state.note}</textarea>`;
+      html += `<button class="btn-next" onclick="generateFollowup()" ${state.followupScenario?"":"disabled"}>生成跟進腳本</button>`;
+      body.innerHTML = html;
+
+    } else if (state.step === 1) {
+      updateProgress(1, 2);
+      const sc = FOLLOWUP_SCENARIOS.find(s => s.id === state.followupScenario);
+      body.innerHTML = resultHtml((sc ? sc.label : "跟進腳本"), state.result, false);
+    }
+    return;
+  }
+}
+
+// ── 操作函數 ──────────────────────────────────────────────
+function goHome() {
+  state.tool = null; state.step = 0; state.result = "";
+  state.car = null; state.rivalName = null; state.followupScenario = null; state.note = "";
+  render();
+}
+function startTool(t) { state.tool = t; state.step = 0; state.result = ""; state.note = ""; render(); }
+function goStep(n) { state.step = n; render(); }
+function selectCar(i) { state.car = CARS[i]; render(); }
+function selectTarget(i) { state.target = TARGETS[i]; render(); }
+function selectType(id) { state.typeId = id; render(); }
+function setPromo(v) { state.promo = v; }
+function setNote(v) { state.note = v; }
+function selectRival(name) { state.rivalName = name; render(); }
+function setLoanMonths(m) { state.loanMonths = m; render(); }
+function setLoanCar(v) { state.car = v !== "" ? CARS[parseInt(v)] : null; }
+function selectFollowup(id) { state.followupScenario = id; render(); }
+function setFollowupCar(v) { state.car = v !== "" ? CARS[parseInt(v)] : null; }
+
+function generateCopy() {
+  state.result = buildContent(state.car, state.target.id, state.typeId, state.promo, state.note);
+  state.step = 4; render();
+}
+function generateRival() {
+  state.result = buildRival(state.car, state.rivalName, state.note);
+  state.step = 2; render();
+}
+function generateLoan() {
+  const price = parseInt(state.loanPrice) || 0;
+  const down  = parseInt(state.loanDown)  || 0;
+  if (!price || price <= 0) { alert("請輸入有效車價"); return; }
+  state.result = buildLoanScript(state.car, price, down, state.loanMonths, state.loanRate, state.note);
+  state.step = 1; render();
+}
+function generateFollowup() {
+  state.result = buildFollowup(state.car, state.followupScenario, state.note);
+  state.step = 1; render();
+}
+function switchType(id) {
+  state.typeId = id;
+  state.result = buildContent(state.car, state.target.id, id, state.promo, state.note);
+  render();
+}
+function doCopy() {
+  copyText(state.result);
+  const btn = document.getElementById("copyBtn");
+  if (btn) {
+    btn.textContent = "✓ 已複製到剪貼簿！";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "📋 複製內容"; btn.classList.remove("copied"); }, 2000);
+  }
+}
+
+// ── 初始化 ────────────────────────────────────────────────
+render();
+
+</script>
+</body>
+</html>
